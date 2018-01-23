@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>MLY</title>
+    <style media="screen">
+
+      .total {
+        display:inline-block;
+        padding: 0.5em;
+        height: 1.5em;
+        width: 6em;
+        text-align: center;
+      }
+      .original {
+        display:inline-block;
+        padding: 0.5em;
+        height: 1.5em;
+        width: 6em;
+        text-align: center;
+      }
+      .change {
+        display:inline-block;
+        padding: 0.5em;
+        height: 1.5em;
+        width: 6em;
+        text-align: center;
+      }
+      .time {
+        display:inline-block;
+        padding: 0.5em;
+        height: 1.5em;
+        width: 6em;
+        text-align: center;
+      }
+      .tongue {
+        font-size: 0.85em;
+      }
+
+    </style>
+  </head>
+  <body>
+    <h2>
+      <span>MollyCoin (MLY)<span>
+    </h2>
+    <p id="timer">
+    </p>
+    <div style="display:none" id="template">
+      <h3 class='total'>
+        <span class="tongue">
+          &#128069;
+        </span>
+      </h3>
+      <p class='original'>
+        ...loading
+      </p>
+      <p class='change'>
+        ...loading
+      </p>
+      <p class='time'>
+        ...loading
+      </p>
+    </div>
+    <div id="stage">
+    </div>
+    <script type="text/javascript">
+const marketCap = 1;
+const circulation = 1;
+const totalInvestment = 1500;
+const coins = [
+{
+count: 0.075,
+name: 'ethereum',
+cost: 100,
+},
+{
+count: 67.0,
+name: 'elixir',
+cost: 100,
+},
+{
+count: 63.0,
+name: 'ethereum-blue',
+cost: 100,
+},
+{
+count: 735.0,
+name: 'bitcoin-red',
+cost: 100,
+},
+{
+count: 52.0,
+name: 'obsidian',
+cost: 100,
+},
+{
+count: 16.0,
+name: 'blockcat',
+cost: 100,
+},
+{
+count: 440.0,
+name: 'litecoin-ultra',
+cost: 100,
+},
+{
+count: 315.0,
+name: 'hive',
+cost: 100,
+},
+{
+count: 39.5,
+name: 'rchain',
+cost: 100,
+},
+{
+count: 18.0,
+name: 'vechain',
+cost: 100,
+},
+{
+count: 86.0,
+name: 'golem',
+cost: 100,
+},
+{
+count: 51.4,
+name: 'bowhead',
+cost: 100,
+},
+{
+count: 1600.0,
+name: 'siacoin',
+cost: 100,
+},
+{
+count: 3.19,
+name: 'eos',
+cost: 50,
+},
+{
+count: 0.018,
+name: 'bitcoin-cash',
+cost: 50,
+},
+{
+count: 350.0,
+name: 'b3coin',
+cost: 50,
+},
+{
+count: 175000.0,
+name: 'protean',
+cost: 50,
+},
+];
+  
+
+function round(value, decimals) {
+  return Number(Math.round(value + 'e' + decimals) + 'e-' + decimals);
+}
+
+const boughtSum = coins.reduce((acc, curr) => acc + curr.cost, 0);
+
+const getStats = () => {
+
+  const template = document.querySelector('#template');
+  const cln = template.cloneNode(true);
+  cln.removeAttribute('template')
+  cln.style.display='block';
+  document.querySelector('#stage').prepend(cln)
+
+  const coinFetches = Promise.all(
+    coins.map(({ name, count, cost }) => {
+      const coinName = name.toLowerCase();
+
+      return fetch(
+        `https://api.coinmarketcap.com/v1/ticker/${coinName}/?convert=USD`
+      )
+        .then(res => res.json())
+        .then(objA => {
+          const obj = objA[0];
+
+          return {
+            "24h": obj.percent_change_24h,
+            "1h": obj.percent_change_1h,
+            "7d": obj.percent_change_7d,
+            price_btc: obj.price_btc,
+            price_usd: obj.price_usd,
+            symbol: obj.symbol,
+            cost,
+            total: count * parseFloat(obj.price_usd),
+            x : count * parseFloat(obj.price_usd) / cost,
+          }
+        });
+    })
+  ).then(coins => {
+    const sum = coins.reduce((acc, curr) => acc + curr.total, 0);
+    const x = sum / boughtSum;
+
+    setTimeout(() => {
+      console.table(coins)
+      console.log({cost: boughtSum, sum, x});
+    }, 500);
+
+    setTimeout(() => {
+      cln.querySelector('.total').innerText = `Current: $${round(sum/marketCap, 2).toFixed(2)}`;
+    }, 1250)
+    setTimeout(() => {
+      cln.querySelector('.original').innerText = `Initial: $${round(totalInvestment, 2).toFixed(2)}`;
+    }, 1250)
+    setTimeout(() => {
+      cln.querySelector('.change').innerText = `Return OI: ${round(x, 3) * 100}%`;
+    }, 1000)
+    setTimeout(() => {
+      cln.querySelector('.time').innerText = `As of: ${(new Date()).toLocaleTimeString()}`;
+    }, 250)
+  });
+}
+
+const delay = 1000 * 60 * 5;
+let timer = delay;
+getStats();
+setInterval(() => {
+  getStats();
+  resetTimer()
+}, delay)
+
+const resetTimer = () => {
+  timer = delay;
+}
+
+const timerDelay = 250;
+setInterval(() => {
+  timer = timer-timerDelay;
+  document.querySelector('#timer').innerText = `...next: ${Math.floor(timer/1000)}`;
+}, timerDelay)
+
+
+</script>
+  </body>
+</html>
